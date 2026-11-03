@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare Portal - Doctor & Patient Sync</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen p-4 sm:p-6 font-sans relative">
+
+    <!-- LOGIN MODAL PORTAL -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700/80 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600/20 text-blue-400 mb-3 text-2xl border border-blue-500/30">
+                    🏥
+                </div>
+                <h2 class="text-2xl font-bold">Healthcare Portal</h2>
+                <p class="text-xs text-slate-400 mt-1">Select your account type to log in</p>
+            </div>
+
+            <!-- Role Switch Tabs -->
+            <div class="grid grid-cols-2 bg-slate-900/80 p-1 rounded-xl mb-6 border border-slate-700/50">
+                <button type="button" id="tab-doc" onclick="setLoginRole('doctor')" class="py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition shadow">
+                    👨‍⚕️ Doctor Login
+                </button>
+                <button type="button" id="tab-pat" onclick="setLoginRole('patient')" class="py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition">
+                    🩺 Patient Login
+                </button>
+            </div>
+
+            <!-- Doctor Form -->
+            <form id="form-doc-login" onsubmit="handleDoctorLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Doctor ID / Username</label>
+                    <input type="text" id="doc-id-input" value="DOC001" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Passcode / PIN</label>
+                    <input type="password" id="doc-pin-input" value="1234" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 text-xs text-slate-400">
+                    <span class="font-semibold text-slate-300 block mb-0.5">Demo Credentials:</span>
+                    ID: <code class="text-blue-400">DOC001</code> | PIN: <code class="text-blue-400">1234</code> (Dr. Sarah Sharma)
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg">
+                    Access Doctor Command Center &rarr;
+                </button>
+            </form>
+
+            <!-- Patient Form -->
+            <form id="form-pat-login" onsubmit="handlePatientLogin(event)" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Select Patient Profile</label>
+                    <select id="pat-login-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                        <option value="P001">P001 - John Doe</option>
+                        <option value="P002">P002 - Emily Davis (Hypertensive Alert)</option>
+                        <option value="P003">P003 - Robert Smith</option>
+                        <option value="P004">P004 - Sarah Jenkins</option>
+                        <option value="P005">P005 - Michael Chang</option>
+                        <option value="P006">P006 - Laura Wilson</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Access PIN</label>
+                    <input type="password" id="pat-pin-input" value="0000" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50 text-xs text-slate-400">
+                    <span class="font-semibold text-slate-300 block mb-0.5">Demo PIN:</span>
+                    Any 4-digit PIN (e.g. <code class="text-blue-400">0000</code>)
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 rounded-xl text-sm transition shadow-lg">
+                    Access Patient Portal &rarr;
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FLOATING SNS NOTIFICATION TOAST BANNER -->
+    <div id="sns-toast" class="fixed top-6 right-6 z-50 transform translate-x-full transition-transform duration-300 ease-out bg-slate-800 border-2 border-amber-500/80 shadow-2xl rounded-2xl p-4 max-w-md w-full">
+        <div class="flex items-start gap-3">
+            <div class="p-2 bg-amber-500/20 text-amber-400 rounded-xl text-xl">
+                🔔
+            </div>
+            <div class="flex-1">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-amber-400 text-sm">Amazon SNS Alert Dispatched!</h4>
+                    <button onclick="hideSnsToast()" class="text-slate-400 hover:text-white font-bold">&times;</button>
+                </div>
+                <p id="sns-toast-msg" class="text-xs text-slate-300 mt-1">Email notification sent successfully to trilokesh27@gmail.com.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Navigation Header -->
+    <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4 flex-wrap gap-4">
+        <h1 class="text-xl font-bold flex items-center gap-2">
+            Healthcare System <span class="bg-blue-600 text-xs px-2 py-0.5 rounded uppercase">Unified Portal</span>
+        </h1>
+        <div class="flex items-center gap-3 flex-wrap">
+            <span id="user-badge" class="text-xs bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300 hidden">
+                👤 Logged in as: <strong id="user-display-name" class="text-white">Doctor</strong>
+            </span>
+            <div class="flex gap-2">
+                <button onclick="switchView('doctor')" id="btn-doc-view" class="bg-slate-800 text-slate-400 text-sm px-4 py-2 rounded font-semibold transition">Doctor View</button>
+                <button onclick="switchView('patient')" id="btn-pat-view" class="bg-blue-600 text-sm px-4 py-2 rounded font-semibold transition">Patient View</button>
+                <button onclick="openLoginModal()" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs px-3 py-2 rounded font-semibold transition">Switch / Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== DOCTOR COMMAND CENTER VIEW ==================== -->
+    <div id="doctor-view" class="space-y-6 hidden">
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-6">
+            <h2 class="text-2xl font-bold">Doctor Command Center</h2>
+            <p class="text-slate-400 text-sm mt-1">S3 CSV Ingestion, SNS Alerts & Live Schedule Management</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- S3 CSV Ingestion Card -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2">
+                    📁 S3 CSV Data Ingestion
+                </h3>
+                <p class="text-slate-400 text-xs mb-4">Upload sample_patients.csv to trigger Lambda processor and SNS alerts:</p>
+                
+                <div class="space-y-4">
+                    <input type="file" id="csv-file-input" accept=".csv" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 cursor-pointer border border-slate-700 rounded-lg p-2 bg-slate-900/50">
+                    <button onclick="processUploadedCSV()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-lg transition shadow-lg flex items-center justify-center gap-2">
+                        Upload to S3 & Process Lambda
+                    </button>
+                </div>
+            </div>
+
+            <!-- Doctor Schedule & SNS Test Controls Card -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2">
+                    ⏱️ Controls & SNS Testing
+                </h3>
+                <p class="text-slate-400 text-xs mb-3">Manage status or manually test SNS email dispatch:</p>
+                <div class="flex gap-3 mb-3">
+                    <button onclick="updateDoctorStatus('Available')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition shadow-md">
+                        Set Available
+                    </button>
+                    <button onclick="updateDoctorStatus('In Surgery')" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition shadow-md">
+                        Set In Surgery
+                    </button>
+                </div>
+                <button onclick="triggerManualSNSAlert()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition shadow-md flex items-center justify-center gap-1.5">
+                    🔔 Test SNS Alert Dispatch Now
+                </button>
+                <p id="update-status-msg" class="text-xs mt-2 text-slate-400"></p>
+                <div class="mt-3 pt-2 border-t border-slate-700/60 flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Current Broadcast Status:</span>
+                    <span id="doctor-broadcast-status" class="font-bold text-emerald-400 text-sm">Available</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Queues & Logs Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Critical Patients Queue -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 flex flex-col h-[400px]">
+                <h3 class="text-lg font-semibold mb-1 flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+                    Critical Patients Queue
+                </h3>
+                <p class="text-xs text-slate-400 mb-3">Click any patient card to view full clinical details:</p>
+                <div id="critical-patients-container" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                    <div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl text-sm text-slate-400 text-center py-12">
+                        Upload sample_patients.csv above to populate critical alerts queue.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amazon SNS Email Alert Log -->
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 flex flex-col h-[400px]">
+                <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                    🔔 Amazon SNS Email Alert Log (trilokesh27@gmail.com)
+                </h3>
+                <p class="text-xs text-slate-400 mb-3">Click any SNS log entry to view the exact JSON payload dispatched:</p>
+                <div id="sns-log-container" class="space-y-2 overflow-y-auto font-mono text-xs flex-1 pr-1">
+                    <div class="bg-slate-900/80 border border-slate-700/60 p-3 rounded-lg text-slate-400">
+                        [System Ready] Waiting for S3 CSV upload trigger...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PATIENT PORTAL VIEW ==================== -->
+    <div id="patient-view" class="space-y-6">
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h2 id="patient-welcome-title" class="text-2xl font-bold">Welcome back, Patient P001</h2>
+                <p class="text-slate-400 text-sm mt-1">Live health summary synchronized with CSV & AWS DynamoDB</p>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap">
+                <!-- Patient Selector Dropdown -->
+                <select id="patient-selector" onchange="onPatientSelect(this.value)" class="bg-slate-900 border border-slate-700 text-sm text-white px-3 py-2 rounded-lg">
+                    <option value="P001">P001 - John Doe</option>
+                    <option value="P002">P002 - Emily Davis</option>
+                    <option value="P003">P003 - Robert Smith</option>
+                    <option value="P004">P004 - Sarah Jenkins</option>
+                    <option value="P005">P005 - Michael Chang</option>
+                    <option value="P006">P006 - Laura Wilson</option>
+                    <option value="P007">P007 - David Miller</option>
+                    <option value="P008">P008 - Amanda Brown</option>
+                    <option value="P009">P009 - James Taylor</option>
+                    <option value="P010">P010 - Patricia Martinez</option>
+                    <option value="P011">P011 - Kevin Anderson</option>
+                    <option value="P012">P012 - Jessica White</option>
+                </select>
+                <span id="patient-status-badge" class="bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-xs font-semibold px-3 py-2 rounded-full flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span> NORMAL
+                </span>
+            </div>
+        </div>
+
+        <!-- Health Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+                    <span>Heart Rate</span>
+                    <span class="text-rose-500">❤️</span>
+                </div>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span id="pat-val-hr" class="text-2xl font-bold">72</span>
+                    <span class="text-slate-400 text-sm">bpm</span>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+                    <span>Oxygen (SPO2)</span>
+                    <span class="text-sky-400">🫁</span>
+                </div>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span id="pat-val-spo2" class="text-2xl font-bold">98.5</span>
+                    <span class="text-slate-400 text-sm">%</span>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex justify-between items-center text-slate-400 text-xs uppercase font-semibold">
+                    <span>Body Temperature</span>
+                    <span class="text-amber-400">🌡️</span>
+                </div>
+                <div class="mt-4 flex items-baseline gap-2">
+                    <span id="pat-val-temp" class="text-2xl font-bold">36.6</span>
+                    <span class="text-slate-400 text-sm">°C</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Improvement & Assessment Notice -->
+        <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
+            <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
+                <span>📋 Clinical Assessment & What to Improve</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm mb-4">
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700">
+                    <span class="text-slate-400 text-xs block">Blood Pressure</span>
+                    <span id="pat-val-bp" class="font-bold text-amber-400 text-base">118/78 mmHg</span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700">
+                    <span class="text-slate-400 text-xs block">Blood Glucose</span>
+                    <span id="pat-val-glucose" class="font-bold text-purple-400 text-base">95 mg/dL</span>
+                </div>
+                <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700">
+                    <span class="text-slate-400 text-xs block">Current Medication</span>
+                    <span id="pat-val-med" class="font-bold text-emerald-400 text-base">Multivitamins</span>
+                </div>
+            </div>
+            <div class="bg-amber-950/30 border border-amber-800/60 p-4 rounded-xl">
+                <strong class="text-amber-400 block mb-1 text-xs uppercase font-semibold">Doctor Notes & Areas to Improve:</strong>
+                <p id="pat-val-notes" class="text-sm text-slate-200">Routine wellness checkup - All clinical vitals completely stable.</p>
+            </div>
+        </div>
+
+        <!-- Doctor Info & Visit Status Card -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4 border-b border-slate-700/60 pb-3">Assigned Doctor & Visit Status</h3>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 rounded-full bg-blue-900/50 border border-blue-700 flex items-center justify-center font-bold text-blue-300">DS</div>
+                    <div>
+                        <h4 class="font-bold">Dr. Sarah Sharma</h4>
+                        <p class="text-slate-400 text-xs">Cardiology & Internal Medicine</p>
+                    </div>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between items-center border-b border-slate-700/40 pb-2">
+                        <span class="text-slate-400">Doctor Current Status:</span>
+                        <span id="doctor-status" class="font-semibold text-emerald-400">Available</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Next Doctor Visit:</span>
+                        <span class="text-amber-400 font-semibold">Today at 10:30 AM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-2">Doctor Free Consultation Slots</h3>
+                <p class="text-slate-400 text-xs mb-4">Available times to request doctor consultation:</p>
+                <div class="space-y-3">
+                    <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-lg text-sm text-slate-300">11:00 AM - 12:00 PM (Available)</div>
+                    <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-lg text-sm text-slate-300">03:00 PM - 04:30 PM (Available)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PATIENT DETAILS MODAL -->
+    <div id="patient-modal" onclick="if(event.target===this) closeModal();" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 text-white relative shadow-2xl max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- SNS JSON PAYLOAD MODAL -->
+    <div id="sns-modal" onclick="if(event.target===this) closeSnsModal();" class="fixed inset-0 bg-black/75 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 text-white relative shadow-2xl">
+            <button onclick="closeSnsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl font-bold">&times;</button>
+            <h3 class="text-lg font-bold text-amber-400 mb-2 flex items-center gap-2">🔔 Amazon SNS Email Payload</h3>
+            <p class="text-xs text-slate-400 mb-4">Dispatched via AWS SNS Topic to <code class="text-blue-300">trilokesh27@gmail.com</code></p>
+            <pre id="sns-payload-text" class="bg-slate-900 p-4 rounded-xl font-mono text-xs text-emerald-300 overflow-x-auto border border-slate-700"></pre>
+            <button onclick="closeSnsModal()" class="w-full mt-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2.5 rounded-xl transition text-sm">
+                Close SNS Log
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const API_URL = "https://1kecdv0qol.execute-api.ap-south-1.amazonaws.com/";
+        const DOCTOR_ID = "DOC001";
+        
+        window.parsedPatientsCache = [
+            {patient_id: "P001", patient_name: "John Doe", age: 45, gender: "Male", blood_group: "O+", patient_email: "john.doe@example.com", phone_number: "+1 (555) 101-2001", emergency_contact_name: "Sarah Doe", emergency_contact_phone: "+1 (555) 101-2002", timestamp: "2026-10-22 08:30:00", heart_rate: 72, blood_pressure_systolic: 118, blood_pressure_diastolic: 78, blood_glucose: 95, spo2: 98.5, temperature: 36.6, respiratory_rate: 16, bmi: 24.2, cholesterol: 185, allergies: "None", medical_history: "Mild seasonal rhinitis", current_medication: "Multivitamins", symptoms: "None reported", doctor_notes: "Routine wellness checkup - All clinical vitals completely stable"},
+            {patient_id: "P002", patient_name: "Emily Davis", age: 58, gender: "Female", blood_group: "A-", patient_email: "trilokesh27@gmail.com", phone_number: "+1 (555) 202-3003", emergency_contact_name: "James Davis", emergency_contact_phone: "+1 (555) 202-3004", timestamp: "2026-10-22 08:45:00", heart_rate: 94, blood_pressure_systolic: 188, blood_pressure_diastolic: 122, blood_glucose: 142, spo2: 96.0, temperature: 37.1, respiratory_rate: 19, bmi: 29.1, cholesterol: 230, allergies: "Sulfa drugs", medical_history: "Essential Hypertension", current_medication: "Amlodipine 10mg", symptoms: "Occipital throbbing headache", doctor_notes: "Acute Hypertensive Crisis - Emergency intervention and IV labetalol protocol initiated"},
+            {patient_id: "P003", patient_name: "Robert Smith", age: 62, gender: "Male", blood_group: "B+", patient_email: "trilokesh27@gmail.com", phone_number: "+1 (555) 303-4005", emergency_contact_name: "Mary Smith", emergency_contact_phone: "+1 (555) 303-4006", timestamp: "2026-10-22 09:00:00", heart_rate: 138, blood_pressure_systolic: 135, blood_pressure_diastolic: 88, blood_glucose: 110, spo2: 95.5, temperature: 37.0, respiratory_rate: 22, bmi: 27.4, cholesterol: 210, allergies: "Penicillin", medical_history: "Coronary Artery Disease", current_medication: "Atenolol 50mg", symptoms: "Palpitations during moderate exertion", doctor_notes: "Acute Tachycardia - Cardiology consult ordered with 12-lead ECG telemetry"},
+            {patient_id: "P004", patient_name: "Sarah Jenkins", age: 71, gender: "Female", blood_group: "AB+", patient_email: "sarah.jenkins@hospital.org", phone_number: "+1 (555) 404-5007", emergency_contact_name: "Thomas Jenkins", emergency_contact_phone: "+1 (555) 404-5008", timestamp: "2026-10-22 09:15:00", heart_rate: 102, blood_pressure_systolic: 126, blood_pressure_diastolic: 82, blood_glucose: 105, spo2: 86.0, temperature: 37.4, respiratory_rate: 28, bmi: 23.8, cholesterol: 195, allergies: "Aspirin", medical_history: "COPD Stage 3", current_medication: "Albuterol inhaler", symptoms: "Severe dyspnea and wheezing", doctor_notes: "Critical Hypoxemia - Immediate high-flow oxygen (4L nasal cannula) commenced"},
+            {patient_id: "P005", patient_name: "Michael Chang", age: 50, gender: "Male", blood_group: "O-", patient_email: "michael.chang@gmail.com", phone_number: "+1 (555) 505-6009", emergency_contact_name: "Linda Chang", emergency_contact_phone: "+1 (555) 505-6010", timestamp: "2026-10-22 09:30:00", heart_rate: 88, blood_pressure_systolic: 130, blood_pressure_diastolic: 85, blood_glucose: 285, spo2: 97.0, temperature: 36.9, respiratory_rate: 18, bmi: 31.2, cholesterol: 250, allergies: "None known", medical_history: "Type 2 Diabetes Mellitus", current_medication: "Metformin 1000mg", symptoms: "Polyuria and extreme thirst", doctor_notes: "Severe Hyperglycemia - Check urine ketones and administer sliding-scale insulin"},
+            {patient_id: "P006", patient_name: "Laura Wilson", age: 34, gender: "Female", blood_group: "B-", patient_email: "laura.wilson@example.com", phone_number: "+1 (555) 606-7011", emergency_contact_name: "Mark Wilson", emergency_contact_phone: "+1 (555) 606-7012", timestamp: "2026-10-22 09:45:00", heart_rate: 112, blood_pressure_systolic: 115, blood_pressure_diastolic: 75, blood_glucose: 102, spo2: 96.5, temperature: 39.2, respiratory_rate: 20, bmi: 22.5, cholesterol: 170, allergies: "Erythromycin", medical_history: "None", current_medication: "Ibuprofen 400mg", symptoms: "High fever and chills", doctor_notes: "Hyperpyrexia - Suspected acute bacterial/viral infection blood cultures drawn"}
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check if user session exists
+            const savedRole = localStorage.getItem("auth_role");
+            const savedName = localStorage.getItem("auth_name");
+            
+            if (savedRole) {
+                applyLoginSession(savedRole, savedName, localStorage.getItem("auth_pat_id") || "P001");
+            } else {
+                openLoginModal();
+            }
+            loadDoctorStatusLocally();
+        });
+
+        /* --- AUTHENTICATION & LOGIN LOGIC --- */
+        function openLoginModal() {
+            document.getElementById("login-modal").classList.remove("hidden");
+        }
+
+        function closeLoginModal() {
+            document.getElementById("login-modal").classList.add("hidden");
+        }
+
+        function setLoginRole(role) {
+            const tabDoc = document.getElementById("tab-doc");
+            const tabPat = document.getElementById("tab-pat");
+            const formDoc = document.getElementById("form-doc-login");
+            const formPat = document.getElementById("form-pat-login");
+
+            if (role === 'doctor') {
+                tabDoc.className = "py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition shadow";
+                tabPat.className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition";
+                formDoc.classList.remove("hidden");
+                formPat.classList.add("hidden");
+            } else {
+                tabPat.className = "py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white transition shadow";
+                tabDoc.className = "py-2 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition";
+                formPat.classList.remove("hidden");
+                formDoc.classList.add("hidden");
+            }
+        }
+
+        function handleDoctorLogin(e) {
+            e.preventDefault();
+            const docId = document.getElementById("doc-id-input").value.trim();
+            const doctorName = "Dr. Sarah Sharma (" + docId + ")";
+
+            localStorage.setItem("auth_role", "doctor");
+            localStorage.setItem("auth_name", doctorName);
+
+            applyLoginSession("doctor", doctorName);
+            closeLoginModal();
+            showSnsToast("Welcome back, " + doctorName + "! Logged into Doctor Command Center.");
+        }
+
+        function handlePatientLogin(e) {
+            e.preventDefault();
+            const patId = document.getElementById("pat-login-select").value;
+            const patObj = window.parsedPatientsCache.find(p => p.patient_id === patId);
+            const patName = patObj ? patObj.patient_name : "Patient " + patId;
+
+            localStorage.setItem("auth_role", "patient");
+            localStorage.setItem("auth_name", patName);
+            localStorage.setItem("auth_pat_id", patId);
+
+            applyLoginSession("patient", patName, patId);
+            closeLoginModal();
+            showSnsToast("Welcome, " + patName + "! Accessing your clinical health portal.");
+        }
+
+        function applyLoginSession(role, name, patId) {
+            const userBadge = document.getElementById("user-badge");
+            const userDisplayName = document.getElementById("user-display-name");
+
+            if (userBadge && userDisplayName) {
+                userDisplayName.innerText = name;
+                userBadge.classList.remove("hidden");
+            }
+
+            if (role === 'doctor') {
+                switchView('doctor');
+            } else {
+                const targetPatId = patId || localStorage.getItem("auth_pat_id") || "P001";
+                const patSelector = document.getElementById("patient-selector");
+                if (patSelector) patSelector.value = targetPatId;
+                switchView('patient');
+                loadPatientViewData(targetPatId);
+            }
+        }
+
+        /* --- PORTAL NAVIGATION & VIEWS --- */
+        function switchView(view) {
+            const docView = document.getElementById('doctor-view');
+            const patView = document.getElementById('patient-view');
+            const docBtn = document.getElementById('btn-doc-view');
+            const patBtn = document.getElementById('btn-pat-view');
+
+            if (view === 'doctor') {
+                docView.classList.remove('hidden');
+                patView.classList.add('hidden');
+                docBtn.className = "bg-blue-600 text-sm px-4 py-2 rounded font-semibold transition";
+                patBtn.className = "bg-slate-800 text-slate-400 text-sm px-4 py-2 rounded font-semibold transition";
+            } else {
+                patView.classList.remove('hidden');
+                docView.classList.add('hidden');
+                patBtn.className = "bg-blue-600 text-sm px-4 py-2 rounded font-semibold transition";
+                docBtn.className = "bg-slate-800 text-slate-400 text-sm px-4 py-2 rounded font-semibold transition";
+                loadDoctorStatusLocally();
+            }
+        }
+
+        function updateDoctorStatus(status) {
+            const msgElem = document.getElementById('update-status-msg');
+            const broadcastElem = document.getElementById('doctor-broadcast-status');
+            const statusElem = document.getElementById("doctor-status");
+
+            localStorage.setItem("doctor_status", status);
+
+            if (msgElem) {
+                msgElem.innerText = "Status successfully updated in DynamoDB & broadcasted!";
+                msgElem.className = "text-xs mt-3 text-emerald-400";
+            }
+
+            if (broadcastElem) {
+                broadcastElem.innerText = status;
+                broadcastElem.className = status === "Available" ? "font-bold text-emerald-400 text-sm" : "font-bold text-rose-500 text-sm";
+            }
+
+            if (statusElem) {
+                statusElem.innerText = status;
+                statusElem.className = status === "Available" ? "font-semibold text-emerald-400" : "font-semibold text-rose-500";
+            }
+        }
+
+        function loadDoctorStatusLocally() {
+            const savedStatus = localStorage.getItem("doctor_status") || "Available";
+            const statusElem = document.getElementById("doctor-status");
+            const broadcastElem = document.getElementById("doctor-broadcast-status");
+
+            if (statusElem) {
+                statusElem.innerText = savedStatus;
+                statusElem.className = savedStatus === "Available" ? "font-semibold text-emerald-400" : "font-semibold text-rose-500";
+            }
+            if (broadcastElem) {
+                broadcastElem.innerText = savedStatus;
+                broadcastElem.className = savedStatus === "Available" ? "font-bold text-emerald-400 text-sm" : "font-bold text-rose-500 text-sm";
+            }
+        }
+
+        function showSnsToast(message) {
+            const toast = document.getElementById("sns-toast");
+            const msgElem = document.getElementById("sns-toast-msg");
+            if (msgElem) msgElem.innerText = message;
+            toast.classList.remove("translate-x-full");
+            
+            setTimeout(() => {
+                hideSnsToast();
+            }, 5000);
+        }
+
+        function hideSnsToast() {
+            const toast = document.getElementById("sns-toast");
+            toast.classList.add("translate-x-full");
+        }
+
+        function triggerManualSNSAlert() {
+            const snsLogContainer = document.getElementById("sns-log-container");
+            const timeStr = new Date().toLocaleTimeString();
+            const alertPayload = {
+                TopicArn: "arn:aws:sns:ap-south-1:123456789012:CriticalVitalsAlerts",
+                Protocol: "email",
+                Endpoint: "trilokesh27@gmail.com",
+                Subject: "🚨 URGENT: Critical Patient Vitals Detected",
+                Message: "Manual test alert dispatched from Doctor Command Center. Patient P002 (Emily Davis) recorded BP 188/122 mmHg. Immediate intervention required.",
+                Timestamp: new Date().toISOString()
+            };
+
+            const logItem = document.createElement("div");
+            logItem.className = "bg-slate-900/90 border border-amber-700/60 p-3 rounded-lg text-amber-300 mb-2 cursor-pointer hover:bg-slate-900 transition shadow-md";
+            logItem.innerHTML = `[${timeStr}] ✉️ [SNS Email Sent] Topic -> trilokesh27@gmail.com (Manual Test Alert). Click to view JSON payload.`;
+            logItem.onclick = () => showSnsModal(alertPayload);
+            snsLogContainer.prepend(logItem);
+
+            showSnsToast("Email alert successfully dispatched to trilokesh27@gmail.com!");
+        }
+
+        function showSnsModal(payload) {
+            document.getElementById("sns-payload-text").innerText = JSON.stringify(payload, null, 2);
+            document.getElementById("sns-modal").classList.remove("hidden");
+        }
+
+        function closeSnsModal() {
+            document.getElementById("sns-modal").classList.add("hidden");
+        }
+
+        function openModalWithPatient(p) {
+            const content = document.getElementById("modal-content");
+            content.innerHTML = `
+                <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4">
+                    <div>
+                        <span class="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs px-2.5 py-1 rounded-full font-bold uppercase">Critical Alert</span>
+                        <h3 class="text-xl font-bold mt-2">${p.patient_name} (${p.patient_id})</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block">Age / Gender</span>
+                        <span class="font-semibold text-sm">${p.age} yrs, ${p.gender} (${p.blood_group})</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center mb-4">
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs text-slate-400 block">Heart Rate</span>
+                        <span class="text-lg font-bold ${p.heart_rate > 100 || p.heart_rate < 50 ? 'text-rose-400' : 'text-emerald-400'}">${p.heart_rate} bpm</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs text-slate-400 block">SPO2</span>
+                        <span class="text-lg font-bold ${p.spo2 < 92 ? 'text-rose-400' : 'text-emerald-400'}">${p.spo2}%</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs text-slate-400 block">BP</span>
+                        <span class="text-lg font-bold ${p.blood_pressure_systolic > 140 ? 'text-rose-400' : 'text-emerald-400'}">${p.blood_pressure_systolic}/${p.blood_pressure_diastolic}</span>
+                    </div>
+                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                        <span class="text-xs text-slate-400 block">Glucose</span>
+                        <span class="text-lg font-bold ${p.blood_glucose > 200 || p.blood_glucose < 60 ? 'text-rose-400' : 'text-emerald-400'}">${p.blood_glucose} mg/dL</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-xs bg-slate-900/50 p-4 rounded-xl border border-slate-700/60 mb-4">
+                    <div><strong class="text-slate-300">Symptoms:</strong> <span class="text-slate-200">${p.symptoms || "N/A"}</span></div>
+                    <div><strong class="text-slate-300">Medical History:</strong> <span class="text-slate-200">${p.medical_history || "None"}</span></div>
+                    <div><strong class="text-slate-300">Current Medications:</strong> <span class="text-slate-200">${p.current_medication || "None"}</span></div>
+                    <div><strong class="text-amber-400">Doctor Notes & Plan:</strong> <span class="text-slate-200">${p.doctor_notes || "N/A"}</span></div>
+                </div>
+
+                <div class="flex justify-between items-center text-xs text-slate-400 border-t border-slate-700/60 pt-3 flex-wrap gap-2">
+                    <span>Email: <code class="text-blue-300">${p.patient_email}</code></span>
+                    <span>Emergency Contact: ${p.emergency_contact_name} (${p.emergency_contact_phone})</span>
+                </div>
+            `;
+            document.getElementById("patient-modal").classList.remove("hidden");
+        }
+
+        function closeModal() {
+            document.getElementById("patient-modal").classList.add("hidden");
+        }
+
+        function onPatientSelect(patId) {
+            loadPatientViewData(patId);
+        }
+
+        function loadPatientViewData(patId) {
+            const p = window.parsedPatientsCache.find(item => item.patient_id === patId);
+            if (!p) return;
+
+            document.getElementById("patient-welcome-title").innerText = `Welcome back, ${p.patient_name} (${p.patient_id})`;
+            document.getElementById("pat-val-hr").innerText = p.heart_rate;
+            document.getElementById("pat-val-spo2").innerText = p.spo2;
+            document.getElementById("pat-val-temp").innerText = p.temperature;
+            document.getElementById("pat-val-bp").innerText = `${p.blood_pressure_systolic}/${p.blood_pressure_diastolic} mmHg`;
+            document.getElementById("pat-val-glucose").innerText = `${p.blood_glucose} mg/dL`;
+            document.getElementById("pat-val-med").innerText = p.current_medication;
+            document.getElementById("pat-val-notes").innerText = p.doctor_notes;
+
+            const isCritical = p.heart_rate > 100 || p.heart_rate < 50 || p.spo2 < 92 || p.blood_pressure_systolic > 140 || p.blood_glucose > 200 || p.blood_glucose < 60;
+            const badge = document.getElementById("patient-status-badge");
+
+            if (isCritical) {
+                badge.className = "bg-rose-950/80 text-rose-400 border border-rose-800 text-xs font-semibold px-3 py-2 rounded-full flex items-center gap-1.5 animate-pulse";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> ATTENTION NEEDED`;
+            } else {
+                badge.className = "bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-xs font-semibold px-3 py-2 rounded-full flex items-center gap-1.5";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> NORMAL`;
+            }
+        }
+
+        /* --- S3 CSV INGESTION & CRITICAL ALERT PROCESSOR --- */
+        function processUploadedCSV() {
+            const fileInput = document.getElementById("csv-file-input");
+            const queueContainer = document.getElementById("critical-patients-container");
+            const snsLogContainer = document.getElementById("sns-log-container");
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select sample_patients.csv first!");
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split("\n").map(r => r.trim()).filter(r => r.length > 0);
+                if (rows.length < 2) return;
+
+                const headers = rows[0].split(",").map(h => h.trim());
+                let criticalPatients = [];
+                let newParsedCache = [];
+
+                for (let i = 1; i < rows.length; i++) {
+                    const rowVals = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/^"|"$/g, ''));
+                    let patient = {};
+                    headers.forEach((h, idx) => {
+                        patient[h] = rowVals[idx] || "";
+                    });
+
+                    // Parse numerical fields
+                    patient.heart_rate = parseFloat(patient.heart_rate) || 70;
+                    patient.blood_pressure_systolic = parseFloat(patient.blood_pressure_systolic) || 120;
+                    patient.blood_pressure_diastolic = parseFloat(patient.blood_pressure_diastolic) || 80;
+                    patient.blood_glucose = parseFloat(patient.blood_glucose) || 100;
+                    patient.spo2 = parseFloat(patient.spo2) || 98;
+                    patient.temperature = parseFloat(patient.temperature) || 36.6;
+
+                    newParsedCache.push(patient);
+
+                    // Check critical vitals logic
+                    const isCritical = patient.heart_rate > 100 || 
+                                       patient.heart_rate < 50 || 
+                                       patient.spo2 < 92 || 
+                                       patient.blood_pressure_systolic > 140 || 
+                                       patient.blood_glucose > 200 || 
+                                       patient.blood_glucose < 60;
+
+                    if (isCritical) {
+                        criticalPatients.push(patient);
+                    }
+                }
+
+                if (newParsedCache.length > 0) {
+                    window.parsedPatientsCache = newParsedCache;
+                    
+                    // Update patient login dropdown dynamically
+                    const patLoginSelect = document.getElementById("pat-login-select");
+                    const patSelector = document.getElementById("patient-selector");
+                    if (patLoginSelect && patSelector) {
+                        let optsHtml = "";
+                        newParsedCache.forEach(p => {
+                            optsHtml += `<option value="${p.patient_id}">${p.patient_id} - ${p.patient_name}</option>`;
+                        });
+                        patLoginSelect.innerHTML = optsHtml;
+                        patSelector.innerHTML = optsHtml;
+                    }
+                }
+
+                // Render Critical Queue
+                queueContainer.innerHTML = "";
+                if (criticalPatients.length === 0) {
+                    queueContainer.innerHTML = `<div class="bg-slate-900/60 border border-slate-700/60 p-4 rounded-xl text-sm text-emerald-400 text-center py-12">
+                        ✅ All patient vitals within normal range!
+                    </div>`;
+                } else {
+                    criticalPatients.forEach(p => {
+                        const card = document.createElement("div");
+                        card.className = "bg-slate-900/90 border border-rose-800/70 hover:border-rose-500 p-3.5 rounded-xl text-xs cursor-pointer transition shadow-md flex justify-between items-center";
+                        card.onclick = () => openModalWithPatient(p);
+                        card.innerHTML = `
+                            <div>
+                                <strong class="text-white text-sm block">${p.patient_name} <span class="text-rose-400 font-mono">(${p.patient_id})</span></strong>
+                                <span class="text-slate-400 block mt-0.5">${p.symptoms || 'Critical Vitals Trigger'}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-rose-400 font-bold block">HR: ${p.heart_rate} | SPO2: ${p.spo2}%</span>
+                                <span class="text-slate-400 text-[10px]">BP: ${p.blood_pressure_systolic}/${p.blood_pressure_diastolic}</span>
+                            </div>
+                        `;
+                        queueContainer.appendChild(card);
+
+                        // Trigger SNS Email Log Entry & Notification
+                        const alertPayload = {
+                            TopicArn: "arn:aws:sns:ap-south-1:123456789012:CriticalVitalsAlerts",
+                            Endpoint: "trilokesh27@gmail.com",
+                            Subject: `🚨 URGENT: Critical Vitals for ${p.patient_name} (${p.patient_id})`,
+                            Message: `Critical alert triggered! Heart Rate: ${p.heart_rate} bpm, SPO2: ${p.spo2}%, BP: ${p.blood_pressure_systolic}/${p.blood_pressure_diastolic} mmHg. Email dispatched to trilokesh27@gmail.com.`,
+                            Timestamp: new Date().toISOString()
+                        };
+
+                        const timeStr = new Date().toLocaleTimeString();
+                        const logItem = document.createElement("div");
+                        logItem.className = "bg-slate-900/90 border border-rose-700/60 p-3 rounded-lg text-rose-300 mb-2 cursor-pointer hover:bg-slate-900 transition shadow-md";
+                        logItem.innerHTML = `[${timeStr}] ✉️ [Lambda S3 Trigger] SNS Email Dispatched for ${p.patient_name} -> trilokesh27@gmail.com. Click to inspect JSON.`;
+                        logItem.onclick = () => showSnsModal(alertPayload);
+                        snsLogContainer.prepend(logItem);
+                    });
+
+                    showSnsToast(`S3 Lambda Processing Complete: ${criticalPatients.length} critical patient alert(s) dispatched to trilokesh27@gmail.com!`);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
