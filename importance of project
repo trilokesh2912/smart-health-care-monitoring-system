@@ -1,0 +1,110 @@
+# 2. How This Project Can Help People
+
+## Introduction
+
+Healthcare is one of the most important parts of society. However, hospitals and healthcare professionals often face challenges when monitoring multiple patients, identifying critical conditions, and maintaining continuous communication with patients.
+
+The Smart Healthcare Monitoring System aims to address these challenges by providing a centralized digital platform for patient monitoring.
+
+By combining web development with cloud computing, the project demonstrates how healthcare information can be organized, monitored, and made accessible to authorized users.
+
+## 1. Helps Doctors Monitor Multiple Patients
+
+Doctors often need to monitor several patients at the same time.
+
+This system provides a centralized dashboard where doctors can view patient information and health readings.
+
+**Benefits:**
+- Reduces the effort required to check individual patient records.
+- Helps doctors identify patients who may need attention.
+- Makes patient information easier to access.
+- Supports better organization of patient monitoring activities.
+
+## 2. Helps Identify Critical Health Conditions
+
+One of the major objectives of this project is to identify abnormal health readings.
+
+For example, if a patient's oxygen saturation or heart rate crosses a predefined threshold, the system can identify that reading and display an alert.
+
+**Benefits:**
+- Helps highlight potentially dangerous readings.
+- Makes abnormal health information easier to notice.
+- Supports quicker review by healthcare professionals.
+- Can help reduce delays in identifying patients who require attention.
+
+The system is intended to support medical professionals and does not replace medical diagnosis.
+
+## 3. Improves Patient Awareness
+
+Patients can access their own dashboard and view available health information.
+
+This makes it easier for patients to understand and keep track of their recorded health readings.
+
+**Benefits:**
+- Encourages patients to stay informed about their health.
+- Provides easier access to personal health information.
+- Supports communication between patients and doctors.
+- Encourages more active participation in healthcare management.
+
+## 4. Supports Remote Healthcare Monitoring
+
+Cloud-based healthcare applications can help healthcare professionals access patient information without always being physically present at the patient's location.
+
+With complete AWS integration, patient data can be stored and accessed through cloud infrastructure.
+
+**Benefits:**
+- Supports remote access to patient information.
+- Can be useful for patients living far from hospitals.
+- Helps doctors review available patient records remotely.
+- Provides a foundation for future telehealth solutions.
+
+## 5. Helps Hospitals Manage Patient Information
+
+Hospitals deal with large amounts of patient information every day.
+
+A centralized healthcare monitoring platform can help organize patient records and make relevant information easier to retrieve.
+
+**Benefits:**
+- Improves patient information management.
+- Reduces dependence on manually checking separate records.
+- Helps organize patient monitoring activities.
+- Provides a foundation for future healthcare automation.
+
+## 6. Provides a Foundation for Emergency Notifications
+
+The project includes an alert mechanism designed around AWS Simple Notification Service (SNS).
+
+When fully integrated, SNS can send notifications when predefined health conditions are detected.
+
+**Benefits:**
+- Can notify relevant healthcare professionals about critical readings.
+- Supports faster communication.
+- Helps healthcare teams prioritize patients.
+- Provides a foundation for automated alert management.
+
+## 7. Makes Healthcare Technology More Scalable
+
+Using AWS cloud services provides an opportunity to build healthcare applications that can grow as the number of patients and amount of data increase.
+
+Services such as Amazon S3, AWS Lambda, and DynamoDB can support future improvements to the system.
+
+**Benefits:**
+- Supports cloud-based data storage.
+- Reduces the need to manage all infrastructure locally.
+- Provides opportunities for future automation.
+- Makes the application easier to extend with additional features.
+
+---
+
+# 3. Future Scope
+
+The project can be improved further through the following enhancements:
+
+1. **Real-Time Monitoring:** Integrate wearable devices to collect patient readings automatically.
+2. **Mobile Application:** Develop an Android or iOS application for patients and doctors.
+3. **AI-Based Prediction:** Use machine learning to identify possible health risks from historical patient data.
+4. **Automated Notifications:** Integrate AWS SNS to send actual SMS or email notifications.
+5. **Historical Data Analysis:** Display graphs showing changes in patient health readings over time.
+6. **Secure Authentication:** Implement stronger authentication and role-based access control.
+7. **Doctor Appointment Management:** Add appointment scheduling and follow-up reminders.
+8. **Multi
