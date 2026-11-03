@@ -1,0 +1,161 @@
+# HOW TO RUN THE PROJECT AND ITS REAL-WORLD IMPACT
+
+# 1. How to Run the Smart Healthcare Monitoring System
+
+Follow these steps to run the Smart Healthcare Monitoring System on your local computer.
+
+## Step 1: Install the Required Software
+
+Before running the project, make sure you have:
+
+- A computer or laptop.
+- Google Chrome or another modern web browser.
+- Visual Studio Code (VS Code).
+- A stable internet connection.
+
+Download Visual Studio Code:
+
+https://code.visualstudio.com/
+
+## Step 2: Download the Project
+
+There are two ways to download the project.
+
+**Method 1: Download from GitHub**
+
+1. Open the GitHub repository.
+2. Click the green **Code** button.
+3. Select **Download ZIP**.
+4. Extract the downloaded ZIP file.
+5. Open the extracted project folder.
+
+**Method 2: Clone Using Git**
+
+Open the VS Code terminal and execute:
+
+```bash
+git clone YOUR_GITHUB_REPOSITORY_URL
+```
+
+Then navigate to the project folder:
+
+```bash
+cd Smart-Healthcare-Monitoring-System
+```
+
+## Step 3: Open the Project in VS Code
+
+1. Open Visual Studio Code.
+2. Select File → Open Folder.
+3. Choose the extracted project folder.
+4. Check that the project files are available.
+
+The main file required to launch the frontend is:
+
+```text
+index.html
+```
+
+If you have separated the JavaScript code into another file, make sure the JavaScript file is also present in the same folder.
+
+Example:
+
+```text
+Smart-Healthcare-Monitoring-System/
+│
+├── index.html
+├── healthcare_monitoring_javascript.js
+└── README.md
+```
+
+If you are using the separate JavaScript file, include this script reference in `index.html`, immediately before the closing `</body>` tag:
+
+```html
+<script src="healthcare_monitoring_javascript.js"></script>
+```
+
+Make sure the original inline JavaScript has been moved rather than duplicated.
+
+## Step 4: Run the Application
+
+**Option A: Using a Web Browser**
+
+1. Locate `index.html`.
+2. Double-click the file.
+3. The application will open in your default browser.
+
+**Option B: Using VS Code Live Server (Recommended)**
+
+1. Open VS Code.
+2. Go to Extensions.
+3. Search for **Live Server**.
+4. Install the extension.
+5. Right-click `index.html`.
+6. Select **Open with Live Server**.
+
+Your application will open in the browser.
+
+## Step 5: Explore the Application
+
+Once the application opens, you can explore the available features.
+
+### A. Login Interface
+
+- Open the login page.
+- Select the Doctor or Patient role.
+- Enter the appropriate demonstration login details configured in the application.
+
+### B. Doctor Dashboard
+
+The doctor dashboard allows users to:
+
+- View available patient records.
+- Monitor patient health readings.
+- Identify patients with abnormal readings.
+- Open detailed patient information.
+- Update doctor availability status.
+- View health alert information.
+
+### C. Patient Dashboard
+
+The patient dashboard allows users to:
+
+- View their personal health information.
+- Monitor available vital readings.
+- Check doctor availability information.
+
+### D. CSV Upload
+
+1. Open the CSV upload section.
+2. Select a patient health dataset.
+3. Upload the CSV file.
+4. Allow the application to process the records.
+5. View the patient information and health readings.
+6. Check whether any readings cross the predefined thresholds.
+
+**Important:** Use a CSV file with the column names and structure expected by the application.
+
+### E. Health Alert Interface
+
+The application checks available readings against predefined thresholds and displays alert information when readings are abnormal.
+
+The current frontend demonstrates alert messages and alert logs. Actual SMS or email delivery requires a working AWS SNS backend integration.
+
+## Step 6: AWS Integration
+
+The project is designed to use the following AWS services:
+
+| AWS Service | Function |
+|---|---|
+| Amazon S3 | Stores patient CSV datasets |
+| AWS Lambda | Processes patient health information |
+| Amazon DynamoDB | Stores patient records |
+| Amazon SNS | Sends health-related notifications |
+| Amazon API Gateway | Connects the web application with backend services |
+
+For a complete cloud deployment, the AWS services must be configured and connected to the frontend through working API endpoints and backend functions.
+
+**Note:** The current frontend can be explored locally without deploying all AWS services. Its demonstration data, browser-side processing, and localStorage-based session features do not represent a complete production healthcare system.
+
+---
+
